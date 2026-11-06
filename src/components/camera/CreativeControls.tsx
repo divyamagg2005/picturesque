@@ -117,19 +117,21 @@ export function CreativeControls({
           ))}
         </div>
 
-        <label className="intensity-control" htmlFor="filter-intensity">
-          <span>Intensity</span>
-          <input
-            id="filter-intensity"
-            max={100}
-            min={0}
-            onChange={(event) => onFilterIntensityChange(Number(event.target.value))}
-            step={1}
-            type="range"
-            value={filterIntensity}
-          />
-          <output>{filterIntensity}%</output>
-        </label>
+        {filterPreset !== "none" && (
+          <label className="intensity-control" htmlFor="filter-intensity">
+            <span>Intensity</span>
+            <input
+              id="filter-intensity"
+              max={100}
+              min={0}
+              onChange={(event) => onFilterIntensityChange(Number(event.target.value))}
+              step={1}
+              type="range"
+              value={filterIntensity}
+            />
+            <output>{filterIntensity}%</output>
+          </label>
+        )}
       </div>
     </div>
   );

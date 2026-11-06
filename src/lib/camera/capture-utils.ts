@@ -53,7 +53,7 @@ export function getFilterPreset(filterPreset: CameraFilterPresetId) {
 }
 
 export function getFilterPreviewStyle(filterPreset: CameraFilterPresetId, intensity: number): string {
-  if (filterPreset === "none") return `brightness(${1 + intensity * 0.02}) contrast(1)`;
+  if (filterPreset === "none") return "none";
 
   const amount = intensity / 100;
   const value = 1 + amount * 0.18;
@@ -227,7 +227,9 @@ export async function captureVideoFrame(
     targetCanvas.height,
   );
 
-  const processedCanvas = applyFilterToCanvas(targetCanvas, filterPreset, filterIntensity);
+  const processedCanvas = filterPreset === "none"
+    ? targetCanvas
+    : applyFilterToCanvas(targetCanvas, filterPreset, filterIntensity);
 
   try {
     return await new Promise<Blob>((resolve, reject) => {
