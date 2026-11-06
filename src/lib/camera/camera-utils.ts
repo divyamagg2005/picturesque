@@ -14,15 +14,64 @@ export interface CameraError {
   message: string;
 }
 
-export function getCameraConstraints(facingMode: CameraFacingMode): MediaStreamConstraints {
+export interface CameraDeviceOption {
+  deviceId: string;
+  label: string;
+  facingMode?: string;
+}
+
+export interface CameraCapabilities {
+  supportsZoom: boolean;
+  minZoom: number;
+  maxZoom: number;
+  stepZoom: number;
+  supportsFocus: boolean;
+  supportsExposureCompensation: boolean;
+  supportsWhiteBalance: boolean;
+}
+
+export function getCameraConstraints(options: {
+  facingMode: CameraFacingMode;
+  deviceId?: string | null;
+  zoom?: number;
+}): MediaStreamConstraints {
+  const videoConstraints: MediaTrackConstraints = {
+    facingMode: { ideal: options.facingMode },
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
+  };
+
+  if (options.deviceId) {
+    videoConstraints.deviceId = { exact: options.deviceId };
+  }
+
+  if (typeof options.zoom === "number") {
+    (videoConstraints as Record<string, unknown>).advanced = [{ zoom: options.zoom }];
+  }
+
   return {
     audio: false,
-    video: {
-      facingMode: { ideal: facingMode },
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
-    },
+    video: videoConstraints,
   };
+}
+
+export function getCameraCapabilities(track?: MediaStreamTrack | null): CameraCapabilities {
+  const capabilities = (track?.getCapabilities?.() ?? {}) as Record<string, any>;
+  const zoomCapabilities = capabilities.zoom as { min?: number; max?: number; step?: number } | undefined;
+
+  return {
+    supportsZoom: typeof zoomCapabilities?.min === "number" && typeof zoomCapabilities?.max === "number",
+    minZoom: zoomCapabilities?.min ?? 1,
+    maxZoom: zoomCapabilities?.max ?? 1,
+    stepZoom: zoomCapabilities?.step ?? 0.1,
+    supportsFocus: typeof capabilities.focusDistance !== "undefined",
+    supportsExposureCompensation: typeof capabilities.exposureCompensation !== "undefined",
+    supportsWhiteBalance: typeof capabilities.whiteBalanceMode !== "undefined",
+  };
+}
+
+export function clampZoom(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }
 
 export function getCameraError(error: unknown): CameraError {

@@ -5,7 +5,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/common/button";
 import type { Pose, ReadinessResult } from "@/types";
 import { useCamera } from "@/hooks/use-camera";
-import { captureVideoFrame, downloadPhoto, sharePhoto } from "@/lib/camera/capture-utils";
+import {
+  captureVideoFrame,
+  downloadPhoto,
+  getAspectRatioValue,
+  getFilterPreviewStyle,
+  sharePhoto,
+  type AspectRatioPresetId,
+  type CameraFilterPresetId,
+} from "@/lib/camera/capture-utils";
 import { getReferencePose } from "@/lib/pose/reference-pose-utils";
 import { evaluateReadiness } from "@/lib/vision/readiness";
 import {
@@ -20,6 +28,7 @@ import { CameraError } from "./CameraError";
 import { CameraGrid } from "./CameraGrid";
 import { CameraLoading } from "./CameraLoading";
 import { CameraPreview } from "./CameraPreview";
+import { CreativeControls } from "./CreativeControls";
 import { OverlayControls } from "./OverlayControls";
 import { PoseOverlay } from "./PoseOverlay";
 import { PoseVisionLayer } from "./PoseVisionLayer";
@@ -38,14 +47,20 @@ type CapturedPhoto = {
 
 export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const {
+    availableCameras,
     camera,
+    cameraCapabilities,
     errorCode,
     facingMode,
     hasStream,
     markVideoReady,
+    selectedDeviceId,
+    setSelectedDeviceId,
     startCamera,
     switchCamera,
+    updateZoom,
     videoRef,
+    zoom,
   } = useCamera();
   const [gridVisible, setGridVisible] = useState(true);
   const [capturedPhoto, setCapturedPhoto] = useState<CapturedPhoto | null>(null);
@@ -59,7 +74,31 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const [overlayScale, setOverlayScale] = useState(1);
   const [overlayOffsetX, setOverlayOffsetX] = useState(0);
   const [overlayOffsetY, setOverlayOffsetY] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState<AspectRatioPresetId>("standard");
+  const [customWidth, setCustomWidth] = useState(1080);
+  const [customHeight, setCustomHeight] = useState(1350);
+  const [filterPreset, setFilterPreset] = useState<CameraFilterPresetId>("none");
+  const [filterIntensity, setFilterIntensity] = useState(55);
+  const [referenceAspectRatio, setReferenceAspectRatio] = useState<number | undefined>(undefined);
   const referencePose = useMemo(() => getReferencePose(pose), [pose]);
+  const liveFilterStyle = getFilterPreviewStyle(filterPreset, filterIntensity);
+  const currentAspectRatio = getAspectRatioValue(aspectRatio, customWidth, customHeight);
+
+  useEffect(() => {
+    if (!pose?.referenceImage) {
+      setReferenceAspectRatio(undefined);
+      return;
+    }
+
+    const referenceImage = new Image();
+    referenceImage.onload = () => {
+      setReferenceAspectRatio(referenceImage.naturalWidth / referenceImage.naturalHeight);
+    };
+    referenceImage.onerror = () => {
+      setReferenceAspectRatio(undefined);
+    };
+    referenceImage.src = pose.referenceImage;
+  }, [pose?.referenceImage]);
 
   const handleReadinessChange = useCallback((next: ReadinessResult) => {
     setReadiness((current) =>
@@ -81,10 +120,15 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
     setIsCapturing(true);
     setActionMessage("");
     try {
-      const width = video.videoWidth;
-      const height = video.videoHeight;
-      const blob = await captureVideoFrame(video, facingMode === "user");
-      setCapturedPhoto({ blob, height, src: URL.createObjectURL(blob), width });
+      const blob = await captureVideoFrame(video, facingMode === "user", {
+        aspectRatio: currentAspectRatio,
+        filterIntensity,
+        filterPreset,
+      });
+      const generatedUrl = URL.createObjectURL(blob);
+      const cropWidth = Math.max(Math.round(video.videoWidth), 1);
+      const cropHeight = Math.max(Math.round(cropWidth / currentAspectRatio), 1);
+      setCapturedPhoto({ blob, height: cropHeight, src: generatedUrl, width: cropWidth });
     } catch (error) {
       setActionMessage(error instanceof Error ? error.message : "The photo could not be captured. Try again.");
     } finally {
@@ -160,6 +204,10 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
         </Link>
       </header>
 
+      <div className="camera-aspect-indicator" aria-live="polite">
+        {currentAspectRatio > 1 ? `${currentAspectRatio.toFixed(2)} : 1` : `1 : ${(1 / currentAspectRatio).toFixed(2)}`} · {filterPreset === "none" ? "Original" : filterPreset.toUpperCase()}
+      </div>
+
       {invalidPoseId && (
         <p className="camera-notice" role="alert">
           That pose is not in the library. You can choose another pose or continue without one.
@@ -177,6 +225,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
               onCanPlay={markVideoReady}
               playsInline
               ref={videoRef}
+              style={{ filter: liveFilterStyle }}
               tabIndex={-1}
             />
 
@@ -263,12 +312,42 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
         ) : camera.status === "ready" ? (
           <>
             <CameraControls
+              availableCameras={availableCameras}
+              cameraCapabilities={cameraCapabilities}
               disabled={isCapturing}
               facingMode={facingMode}
               gridVisible={gridVisible}
               onCapture={() => void handleCapture()}
+              onDeviceChange={(deviceId) => {
+                setSelectedDeviceId(deviceId);
+                void startCamera(facingMode, deviceId, zoom);
+              }}
               onSwitchCamera={() => void switchCamera()}
               onToggleGrid={() => setGridVisible((visible) => !visible)}
+              onZoomChange={(value) => {
+                void updateZoom(value);
+              }}
+              selectedDeviceId={selectedDeviceId}
+              zoom={zoom}
+            />
+            <CreativeControls
+              aspectRatio={aspectRatio}
+              customHeight={customHeight}
+              customWidth={customWidth}
+              filterIntensity={filterIntensity}
+              filterPreset={filterPreset}
+              onAspectRatioChange={setAspectRatio}
+              onCustomHeightChange={setCustomHeight}
+              onCustomWidthChange={setCustomWidth}
+              onFilterIntensityChange={setFilterIntensity}
+              onFilterPresetChange={setFilterPreset}
+              onMatchReference={() => {
+                if (!referenceAspectRatio) return;
+                setAspectRatio("custom");
+                setCustomWidth(Math.max(Math.round(referenceAspectRatio * 1000), 1));
+                setCustomHeight(1000);
+              }}
+              referenceAspectRatio={referenceAspectRatio}
             />
             {pose && (
               <OverlayControls

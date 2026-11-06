@@ -1312,8 +1312,184 @@ button {
   gap: 0.65rem;
 }
 
-.photo-actions .button {
-  min-height: 3rem;
+.camera-controls-panel {
+  display: grid;
+  width: min(100%, 560px);
+  gap: 0.65rem;
+}
+
+.camera-toolbar-row {
+  display: grid;
+  width: min(100%, 560px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 0.75rem;
+}
+
+.camera-device-picker,
+.camera-zoom-control,
+.intensity-control,
+.custom-ratio-fields label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.camera-device-picker select,
+.custom-ratio-fields input {
+  min-height: 2.6rem;
+  border: 1px solid rgb(240 238 231 / 14%);
+  border-radius: 10px;
+  background: #141914;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.78rem;
+  letter-spacing: normal;
+  text-transform: none;
+  padding: 0.6rem 0.7rem;
+}
+
+.camera-zoom-control {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.camera-zoom-control input,
+.intensity-control input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.camera-zoom-control output,
+.intensity-control output,
+.ratio-meta strong {
+  color: var(--foreground);
+  font-size: 0.74rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.camera-aspect-indicator {
+  width: min(100%, 560px);
+  margin: 0 auto;
+  border: 1px solid rgb(240 238 231 / 12%);
+  border-radius: 999px;
+  background: rgb(19 23 20 / 88%);
+  color: var(--muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.55rem 0.75rem;
+}
+
+.creative-controls {
+  display: grid;
+  width: min(100%, 560px);
+  gap: 0.85rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+}
+
+.creative-section {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.creative-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--foreground);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.inline-action {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.63rem;
+  letter-spacing: 0.06em;
+  padding: 0.45rem 0.7rem;
+  text-transform: uppercase;
+}
+
+.aspect-ratio-strip,
+.filter-strip {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scrollbar-width: none;
+}
+
+.aspect-ratio-strip::-webkit-scrollbar,
+.filter-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.aspect-pill,
+.filter-pill {
+  flex: 0 0 auto;
+  border: 1px solid rgb(240 238 231 / 12%);
+  border-radius: 999px;
+  background: rgb(20 24 21 / 92%);
+  color: var(--foreground);
+  cursor: pointer;
+  font: inherit;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.8rem;
+}
+
+.aspect-pill.is-selected,
+.filter-pill.is-selected {
+  border-color: var(--accent);
+  background: rgb(21 42 33 / 75%);
+  color: var(--foreground);
+}
+
+.filter-pill {
+  display: inline-grid;
+  place-items: center;
+  padding: 0.5rem 0.75rem;
+  min-width: 5.6rem;
+  color: #f7f3ee;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 36%);
+}
+
+.custom-ratio-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.ratio-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.intensity-control {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .photo-dimensions,
