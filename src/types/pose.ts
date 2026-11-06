@@ -53,7 +53,9 @@ export interface PoseLandmark {
   name: ReferenceLandmarkName;
   x: number;
   y: number;
+  z?: number;
   visibility?: number;
+  presence?: number;
 }
 
 export type PoseLandmarks = PoseLandmark[];
@@ -81,16 +83,36 @@ export interface Pose {
   referencePose?: ReferencePose;
 }
 
+export type PoseBodyPart = "head" | "shoulders" | "arms" | "torso" | "legs";
+
 export type PoseFeedbackKind = "instruction" | "correction" | "success";
 
 export interface PoseFeedback {
   kind: PoseFeedbackKind;
   message: string;
   landmarkIndex?: number;
+  bodyPart?: PoseBodyPart;
+}
+
+export interface PoseBodyPartScore {
+  bodyPart: PoseBodyPart;
+  score: number;
+  confidence: number;
+}
+
+export interface PoseMismatch {
+  bodyPart: PoseBodyPart;
+  landmarkName?: ReferenceLandmarkName;
+  error: number;
+  direction?: "raise" | "lower" | "bend" | "straighten" | "inward" | "outward" | "left" | "right";
 }
 
 export interface AlignmentResult {
   score: number;
   isAligned: boolean;
+  confidence: number;
+  bodyPartScores: PoseBodyPartScore[];
+  missingLandmarks: ReferenceLandmarkName[];
+  majorMismatches: PoseMismatch[];
   feedback: PoseFeedback[];
 }

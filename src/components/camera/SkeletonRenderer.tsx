@@ -6,12 +6,15 @@ type SkeletonRendererProps = {
   width: number;
   height: number;
   opacity: number;
+  variant?: "reference" | "detected";
 };
 
-export function SkeletonRenderer({ landmarks, width, height, opacity }: SkeletonRendererProps) {
+export function SkeletonRenderer({ landmarks, width, height, opacity, variant = "reference" }: SkeletonRendererProps) {
   const points = new Map(landmarks.map((landmark) => [landmark.name, landmark]));
   const radius = Math.max(3, Math.min(width, height) * 0.007);
   const lineWidth = Math.max(2, radius * 0.72);
+  const color = variant === "detected" ? "#75dfad" : "#d8e4d1";
+  const jointColor = variant === "detected" ? "#b3ffd5" : "#f0eee7";
 
   return (
     <svg
@@ -21,7 +24,7 @@ export function SkeletonRenderer({ landmarks, width, height, opacity }: Skeleton
       style={{ opacity }}
       viewBox={`0 0 ${width} ${height}`}
     >
-      <g fill="none" stroke="#d8e4d1" strokeLinecap="round" strokeLinejoin="round" strokeWidth={lineWidth}>
+      <g fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={lineWidth}>
         {POSE_CONNECTIONS.map(([startName, endName]) => {
           const start = points.get(startName);
           const end = points.get(endName);
@@ -39,7 +42,7 @@ export function SkeletonRenderer({ landmarks, width, height, opacity }: Skeleton
           );
         })}
       </g>
-      <g fill="#f0eee7" stroke="#8fa487" strokeWidth={Math.max(1.5, lineWidth * 0.7)}>
+      <g fill={jointColor} stroke={color} strokeWidth={Math.max(1.5, lineWidth * 0.7)}>
         {landmarks.map((landmark) => (
           <circle
             key={landmark.name}

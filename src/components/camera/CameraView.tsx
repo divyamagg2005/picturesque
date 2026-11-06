@@ -21,6 +21,7 @@ import { CameraLoading } from "./CameraLoading";
 import { CameraPreview } from "./CameraPreview";
 import { OverlayControls } from "./OverlayControls";
 import { PoseOverlay } from "./PoseOverlay";
+import { PoseVisionLayer } from "./PoseVisionLayer";
 
 type CameraViewProps = {
   pose?: Pose;
@@ -201,6 +202,14 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
               <CameraLoading
                 onStart={() => void startCamera()}
                 requesting={camera.status === "requesting"}
+              />
+            )}
+            {pose && (
+              <PoseVisionLayer
+                enabled={hasStream && camera.status === "ready" && !capturedPhoto}
+                mirrored={facingMode === "user"}
+                pose={pose}
+                videoRef={videoRef}
               />
             )}
           </div>

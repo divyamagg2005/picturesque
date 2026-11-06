@@ -1294,6 +1294,78 @@ button {
   pointer-events: none;
 }
 
+.live-pose-overlay {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pose-vision-panel {
+  position: absolute;
+  z-index: 6;
+  top: 0.55rem;
+  right: 0.55rem;
+  left: 0.55rem;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border: 1px solid rgb(240 238 231 / 14%);
+  padding: 0.55rem 0.65rem;
+  background: rgb(12 15 13 / 84%);
+  pointer-events: none;
+}
+
+.pose-vision-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.pose-vision-copy strong {
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.pose-vision-feedback {
+  color: var(--accent);
+}
+
+.pose-vision-error {
+  color: #e2c5bd;
+}
+
+.pose-vision-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+  pointer-events: auto;
+}
+
+.pose-vision-toggle {
+  min-height: 2.5rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.35rem 0.5rem;
+  background: #171c18;
+  color: var(--foreground);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.64rem;
+  white-space: nowrap;
+}
+
+.pose-vision-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .reference-image-overlay {
   position: absolute;
   z-index: 1;
@@ -1625,6 +1697,24 @@ button {
 
   .overlay-position-value {
     grid-column: 1 / -1;
+  }
+
+  .pose-vision-panel {
+    top: 0.4rem;
+    right: 0.4rem;
+    left: 0.4rem;
+    gap: 0.35rem;
+    padding: 0.4rem 0.45rem;
+  }
+
+  .pose-vision-copy {
+    font-size: 0.62rem;
+  }
+
+  .pose-vision-toggle {
+    min-height: 2.5rem;
+    padding: 0.3rem 0.35rem;
+    font-size: 0.59rem;
   }
 }
 
