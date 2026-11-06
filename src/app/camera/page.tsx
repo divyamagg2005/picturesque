@@ -30,6 +30,10 @@ async function CameraPageContent({ searchParams }: CameraPageProps) {
   const selectedPose = getPoseById(requestedId);
 
   return (
-    <CameraView invalidPoseId={Boolean(requestedId && !selectedPose)} pose={selectedPose} />
+    <CameraView
+      invalidPoseId={Boolean(requestedId && !selectedPose)}
+      key={selectedPose?.id ?? "no-pose"}
+      pose={selectedPose}
+    />
   );
 }

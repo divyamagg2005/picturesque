@@ -1,16 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/common/button";
 import type { Pose } from "@/types";
 import { useCamera } from "@/hooks/use-camera";
 import { captureVideoFrame, downloadPhoto, sharePhoto } from "@/lib/camera/capture-utils";
+import { getReferencePose } from "@/lib/pose/reference-pose-utils";
+import {
+  clampOverlayOffset,
+  clampOverlayOpacity,
+  clampOverlayScale,
+  DEFAULT_OVERLAY_OPACITY,
+  type OverlayMode,
+} from "@/lib/pose/overlay-utils";
 import { CameraControls } from "./CameraControls";
 import { CameraError } from "./CameraError";
 import { CameraGrid } from "./CameraGrid";
 import { CameraLoading } from "./CameraLoading";
 import { CameraPreview } from "./CameraPreview";
+import { OverlayControls } from "./OverlayControls";
+import { PoseOverlay } from "./PoseOverlay";
 
 type CameraViewProps = {
   pose?: Pose;
@@ -39,6 +49,14 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const [capturedPhoto, setCapturedPhoto] = useState<CapturedPhoto | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
+  const [overlayMode, setOverlayMode] = useState<OverlayMode>(() =>
+    pose?.referenceImage ? "image" : pose?.referencePose ? "skeleton" : "off",
+  );
+  const [overlayOpacity, setOverlayOpacity] = useState(DEFAULT_OVERLAY_OPACITY);
+  const [overlayScale, setOverlayScale] = useState(1);
+  const [overlayOffsetX, setOverlayOffsetX] = useState(0);
+  const [overlayOffsetY, setOverlayOffsetY] = useState(0);
+  const referencePose = useMemo(() => getReferencePose(pose), [pose]);
 
   useEffect(() => {
     if (!capturedPhoto) return;
@@ -67,6 +85,19 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
     setCapturedPhoto(null);
     setActionMessage("");
     if (!hasStream) void startCamera(facingMode);
+  }
+
+  function resetOverlay() {
+    setOverlayMode(pose?.referenceImage ? "image" : referencePose ? "skeleton" : "off");
+    setOverlayOpacity(DEFAULT_OVERLAY_OPACITY);
+    setOverlayScale(1);
+    setOverlayOffsetX(0);
+    setOverlayOffsetY(0);
+  }
+
+  function moveOverlay(horizontal: number, vertical: number) {
+    setOverlayOffsetX((current) => clampOverlayOffset(current + horizontal));
+    setOverlayOffsetY((current) => clampOverlayOffset(current + vertical));
   }
 
   function handleDownload() {
@@ -104,7 +135,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const backHref = pose ? `/poses/${pose.id}` : "/explore";
 
   return (
-    <main className="camera-app">
+    <main className={`camera-app${pose ? " has-pose" : ""}`}>
       <header className="camera-topbar">
         <Link aria-label={pose ? `Back to ${pose.name}` : "Back to poses"} className="camera-back-link" href={backHref}>
           <span aria-hidden="true">←</span> Back
@@ -143,6 +174,19 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
             ) : hasStream ? (
               <>
                 {gridVisible && <CameraGrid />}
+                {camera.status === "ready" && pose && (
+                  <PoseOverlay
+                    imageAlt={`${pose.name} reference photograph`}
+                    mirrored={facingMode === "user"}
+                    mode={overlayMode}
+                    offsetX={overlayOffsetX}
+                    offsetY={overlayOffsetY}
+                    opacity={overlayOpacity}
+                    referenceImage={pose.referenceImage}
+                    referencePose={referencePose}
+                    scale={overlayScale}
+                  />
+                )}
                 {camera.status !== "ready" && (
                   <p className="camera-stage-status" role="status">Preparing live preview...</p>
                 )}
@@ -174,14 +218,32 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
             <Button onClick={() => void handleShare()} type="button" variant="secondary">Share</Button>
           </div>
         ) : camera.status === "ready" ? (
-          <CameraControls
-            disabled={isCapturing}
-            facingMode={facingMode}
-            gridVisible={gridVisible}
-            onCapture={() => void handleCapture()}
-            onSwitchCamera={() => void switchCamera()}
-            onToggleGrid={() => setGridVisible((visible) => !visible)}
-          />
+          <>
+            <CameraControls
+              disabled={isCapturing}
+              facingMode={facingMode}
+              gridVisible={gridVisible}
+              onCapture={() => void handleCapture()}
+              onSwitchCamera={() => void switchCamera()}
+              onToggleGrid={() => setGridVisible((visible) => !visible)}
+            />
+            {pose && (
+              <OverlayControls
+                imageAvailable={Boolean(pose.referenceImage)}
+                mode={overlayMode}
+                offsetX={overlayOffsetX}
+                offsetY={overlayOffsetY}
+                onModeChange={setOverlayMode}
+                onMove={moveOverlay}
+                onOpacityChange={(opacity) => setOverlayOpacity(clampOverlayOpacity(opacity))}
+                onReset={resetOverlay}
+                onScaleChange={(scale) => setOverlayScale(clampOverlayScale(scale))}
+                opacity={overlayOpacity}
+                scale={overlayScale}
+                skeletonAvailable={Boolean(referencePose?.landmarks.length)}
+              />
+            )}
+          </>
         ) : null}
 
         <p aria-live="polite" className="camera-action-message">{actionMessage}</p>

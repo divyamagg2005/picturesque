@@ -1,6 +1,6 @@
 # Picturesque
 
-Picturesque is an AI-guided photography application built with the Next.js App Router, TypeScript, and Tailwind CSS 4. It includes a searchable pose library, local recently viewed history, and a browser-native camera for live preview and local photo capture.
+Picturesque is an AI-guided photography application built with the Next.js App Router, TypeScript, and Tailwind CSS 4. It includes a searchable pose library, local recently viewed history, a browser-native camera, and adjustable reference pose overlays.
 
 ## Development
 
@@ -18,7 +18,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - `/` - Homepage, featured poses, categories, and recently viewed poses.
 - `/explore` - Searchable pose library with category filters.
 - `/poses/[poseId]` - Reference image, instructions, tips, and related poses.
-- `/camera?poseId=[poseId]` - Local camera preview, composition grid, capture, review, and download/share.
+- `/camera?poseId=[poseId]` - Local camera preview, composition grid, reference guide, capture, review, and download/share.
 
 ## Project Structure
 
@@ -29,12 +29,12 @@ src/
 		common/            Shared presentation components
 		home/              Homepage sections
 		poses/             Pose discovery and detail components
-		camera/            Camera preview, controls, and capture components
+		camera/            Camera preview, capture, and pose overlay components
 	hooks/               Client-side hooks, including recent history
 	lib/
 		camera/            Browser camera and capture utilities
 		vision/            Computer vision integration boundary
-		pose/              Pose domain helpers and browser storage
+		pose/              Pose data, coordinate mapping, skeleton, and browser storage helpers
 	data/                Typed local pose dataset
 	types/               Shared domain contracts
 	utils/               Small cross-cutting utilities
@@ -55,4 +55,4 @@ The 16 initial pose references are served from Unsplash URLs available under the
 
 ## Scope
 
-Camera streams and captured images stay on the device. Photos are held temporarily for review and are not persisted by the app. MediaPipe, pose matching, alignment, AI feedback, backend services, and cloud storage are not implemented. The app is deployable on Vercel using the standard Next.js deployment flow.
+Camera streams and captured images stay on the device. Photos are held temporarily for review and are not persisted by the app. Reference overlays support photo and named-landmark skeleton modes, opacity, scale, manual position, mirroring, and responsive coordinate mapping. Skeleton mode accepts normalized MediaPipe-compatible landmarks, but the initial pose dataset has no verified landmark annotations, so photo mode is available and skeleton mode is disabled until those annotations are supplied. MediaPipe, pose matching, alignment, AI feedback, backend services, and cloud storage are not implemented. The app is deployable on Vercel using the standard Next.js deployment flow.

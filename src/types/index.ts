@@ -9,4 +9,6 @@ export type {
   PoseFeedbackKind,
   PoseLandmark,
   PoseLandmarks,
+  ReferenceLandmarkName,
+  ReferencePose,
 } from "./pose";

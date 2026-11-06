@@ -1041,6 +1041,7 @@ button {
 .camera-workspace {
   display: flex;
   width: 100%;
+  min-width: 0;
   flex: 1;
   flex-direction: column;
   align-items: center;
@@ -1052,6 +1053,7 @@ button {
 .camera-stage-wrap {
   display: grid;
   width: min(100%, 560px);
+  min-width: 0;
   justify-items: center;
   gap: 0.45rem;
 }
@@ -1064,6 +1066,10 @@ button {
   overflow: hidden;
   background: #090b09;
   isolation: isolate;
+}
+
+.camera-app.has-pose .camera-stage {
+  width: min(100%, 400px);
 }
 
 .camera-video,
@@ -1271,6 +1277,224 @@ button {
   color: var(--foreground);
 }
 
+.pose-overlay {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pose-skeleton {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.reference-image-overlay {
+  position: absolute;
+  z-index: 1;
+  max-width: none;
+  pointer-events: none;
+}
+
+.reference-image-overlay-img {
+  object-fit: contain;
+}
+
+.reference-image-fallback {
+  position: absolute;
+  z-index: 1;
+  inset: 1rem;
+  display: grid;
+  place-content: center;
+  background: rgb(12 15 13 / 32%);
+  color: var(--foreground);
+  font-size: 0.8rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.overlay-controls {
+  display: grid;
+  width: min(100%, 560px);
+  min-width: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 0.55rem;
+}
+
+.overlay-settings-summary {
+  display: grid;
+  min-height: 2.75rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.overlay-settings-summary::-webkit-details-marker {
+  display: none;
+}
+
+.overlay-settings-summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.overlay-summary-title {
+  color: var(--foreground);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+}
+
+.overlay-summary-value,
+.overlay-summary-chevron {
+  color: var(--muted);
+  font-size: 0.69rem;
+}
+
+.overlay-summary-chevron {
+  transition: transform 160ms ease;
+}
+
+.overlay-controls[open] .overlay-summary-chevron {
+  transform: rotate(180deg);
+}
+
+.overlay-settings-body {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.25rem 0 0.45rem;
+}
+
+.overlay-control-header,
+.overlay-position-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.overlay-control-header > span {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 0.7rem;
+}
+
+.overlay-reset-button {
+  min-height: 2.5rem;
+  border: 0;
+  padding: 0.4rem 0.6rem;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.overlay-mode-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.overlay-mode-options button,
+.overlay-scale-controls button,
+.overlay-nudge-controls button {
+  min-height: 2.55rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.35rem 0.5rem;
+  background: #171c18;
+  color: var(--foreground);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  touch-action: manipulation;
+}
+
+.overlay-mode-options button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.overlay-mode-options button:disabled,
+.overlay-scale-controls button:disabled,
+.overlay-nudge-controls button:disabled,
+.overlay-opacity-control input:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.overlay-mode-options button:focus-visible,
+.overlay-reset-button:focus-visible,
+.overlay-scale-controls button:focus-visible,
+.overlay-nudge-controls button:focus-visible,
+.overlay-opacity-control input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.overlay-landmark-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.overlay-opacity-control {
+  display: grid;
+  grid-template-columns: auto minmax(5rem, 1fr) 2.75rem;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.overlay-opacity-control input {
+  width: 100%;
+  min-height: 2.5rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.overlay-opacity-control output {
+  color: var(--foreground);
+  text-align: right;
+}
+
+.overlay-scale-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.overlay-scale-controls button,
+.overlay-nudge-controls button {
+  width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.overlay-nudge-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.overlay-position-value {
+  min-width: 4.5rem;
+  color: var(--muted);
+  font-size: 0.64rem;
+  text-align: right;
+}
+
 @media (orientation: landscape) and (max-height: 700px) {
   .camera-app {
     gap: 0.3rem;
@@ -1282,9 +1506,14 @@ button {
 
   .camera-stage {
     width: auto;
-    height: min(calc(100dvh - 155px), 72vw);
+    height: min(max(180px, calc(100dvh - 320px)), 72vw);
     max-height: none;
     aspect-ratio: 4 / 3;
+  }
+
+  .camera-app.has-pose .camera-stage {
+    width: auto;
+    height: min(max(180px, calc(100dvh - 350px)), 72vw);
   }
 
   .camera-controls {
@@ -1331,6 +1560,10 @@ button {
     max-height: calc(100dvh - 205px);
   }
 
+  .camera-app.has-pose .camera-stage {
+    max-height: calc(100dvh - 345px);
+  }
+
   .camera-controls {
     min-height: 4.9rem;
   }
@@ -1354,6 +1587,44 @@ button {
 
   .camera-notice {
     font-size: 0.72rem;
+  }
+
+  .overlay-controls {
+    gap: 0.35rem;
+    padding-top: 0.35rem;
+  }
+
+  .overlay-position-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.35rem;
+  }
+
+  .overlay-scale-controls,
+  .overlay-nudge-controls {
+    min-width: 0;
+  }
+
+  .overlay-scale-controls {
+    justify-content: start;
+  }
+
+  .overlay-landmark-note {
+    font-size: 0.64rem;
+  }
+
+  .overlay-nudge-controls {
+    justify-content: end;
+    gap: 0.15rem;
+  }
+
+  .overlay-scale-controls,
+  .overlay-nudge-controls {
+    gap: 0.25rem;
+  }
+
+  .overlay-position-value {
+    grid-column: 1 / -1;
   }
 }
 
