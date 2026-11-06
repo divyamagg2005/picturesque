@@ -1832,23 +1832,34 @@ button {
   gap: 0.35rem;
 }
 
+.overlay-controls-shell {
+  display: grid;
+  width: min(100%, 560px);
+  min-width: 0;
+  margin-inline: auto;
+  gap: 0.35rem;
+}
+
 .gallery-reference-controls {
   display: grid;
-  gap: 0.4rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
 }
 
 .gallery-reference-picker {
   position: relative;
   display: flex;
-  min-height: 2.55rem;
+  min-height: 3rem;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line);
+  border: 1px solid var(--accent);
   border-radius: 2px;
-  background: #171c18;
-  color: var(--foreground);
+  background: var(--accent);
+  color: #182019;
   cursor: pointer;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
+  font-weight: 700;
   touch-action: manipulation;
 }
 
@@ -1869,11 +1880,12 @@ button {
 
 .gallery-reference-selected {
   display: flex;
+  max-width: 45%;
   min-width: 0;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  color: var(--muted);
+  color: var(--foreground);
   font-size: 0.68rem;
 }
 

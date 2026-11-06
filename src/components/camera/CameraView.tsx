@@ -353,6 +353,23 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
         {currentAspectRatio > 1 ? `${currentAspectRatio.toFixed(2)} : 1` : `1 : ${(1 / currentAspectRatio).toFixed(2)}`} · {filterPreset === "none" ? "Original" : filterPreset.toUpperCase()}
       </div>
 
+      <OverlayControls
+        galleryImageName={galleryReference?.name}
+        imageAvailable={Boolean(activeReferenceImage)}
+        mode={overlayMode}
+        offsetX={overlayOffsetX}
+        offsetY={overlayOffsetY}
+        onGalleryImageSelect={(file) => void handleGalleryImageSelect(file)}
+        onModeChange={setOverlayMode}
+        onMove={moveOverlay}
+        onOpacityChange={(opacity) => setOverlayOpacity(clampOverlayOpacity(opacity))}
+        onRemoveGalleryImage={() => void handleRemoveGalleryImage()}
+        onReset={resetOverlay}
+        onScaleChange={(scale) => setOverlayScale(clampOverlayScale(scale))}
+        opacity={overlayOpacity}
+        scale={overlayScale}
+      />
+
       {invalidPoseId && (
         <p className="camera-notice" role="alert">
           That pose is not in the library. You can choose another pose or continue without one.
@@ -500,23 +517,6 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
             />
           </>
         )}
-        <OverlayControls
-          galleryImageName={galleryReference?.name}
-          imageAvailable={Boolean(activeReferenceImage)}
-          mode={overlayMode}
-          offsetX={overlayOffsetX}
-          offsetY={overlayOffsetY}
-          onGalleryImageSelect={(file) => void handleGalleryImageSelect(file)}
-          onModeChange={setOverlayMode}
-          onMove={moveOverlay}
-          onOpacityChange={(opacity) => setOverlayOpacity(clampOverlayOpacity(opacity))}
-          onRemoveGalleryImage={() => void handleRemoveGalleryImage()}
-          onReset={resetOverlay}
-          onScaleChange={(scale) => setOverlayScale(clampOverlayScale(scale))}
-          opacity={overlayOpacity}
-          scale={overlayScale}
-        />
-
         <p aria-live="polite" className="camera-action-message">{actionMessage}</p>
         <p className="camera-privacy-note">Camera stays on this device. Nothing is uploaded.</p>
       </section>
