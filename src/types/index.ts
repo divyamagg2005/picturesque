@@ -19,4 +19,6 @@ export type {
   PoseDetectionSnapshot,
   PoseDetectionStatus,
   PoseModelStatus,
+  ReadinessResult,
+  ReadinessState,
 } from "./vision";

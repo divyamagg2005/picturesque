@@ -1124,6 +1124,60 @@ button {
   text-align: center;
 }
 
+.readiness-badge {
+  position: absolute;
+  z-index: 5;
+  top: 0.7rem;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transform: translateX(-50%);
+  border: 1px solid rgb(240 238 231 / 14%);
+  border-radius: 999px;
+  padding: 0.5rem 0.8rem;
+  background: rgb(12 15 13 / 78%);
+  color: var(--foreground);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.readiness-badge.is-ready {
+  border-color: rgb(93 208 137 / 45%);
+  background: rgb(24 60 38 / 92%);
+  color: #d9fbe7;
+}
+
+.readiness-badge.is-stabilizing {
+  border-color: rgb(255 193 64 / 45%);
+  background: rgb(71 51 17 / 82%);
+  color: #ffdc93;
+}
+
+.readiness-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentcolor;
+  box-shadow: 0 0 0 0.2rem rgb(255 255 255 / 12%);
+}
+
+.camera-readiness-message {
+  position: absolute;
+  z-index: 5;
+  right: 0.7rem;
+  bottom: 0.7rem;
+  left: 0.7rem;
+  margin: 0;
+  color: var(--foreground);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .camera-state-panel {
   position: absolute;
   z-index: 4;

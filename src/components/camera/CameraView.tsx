@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/common/button";
-import type { Pose } from "@/types";
+import type { Pose, ReadinessResult } from "@/types";
 import { useCamera } from "@/hooks/use-camera";
 import { captureVideoFrame, downloadPhoto, sharePhoto } from "@/lib/camera/capture-utils";
 import { getReferencePose } from "@/lib/pose/reference-pose-utils";
+import { evaluateReadiness } from "@/lib/vision/readiness";
 import {
   clampOverlayOffset,
   clampOverlayOpacity,
@@ -50,6 +51,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const [capturedPhoto, setCapturedPhoto] = useState<CapturedPhoto | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
+  const [readiness, setReadiness] = useState<ReadinessResult>(() => evaluateReadiness(null, { status: "idle" }, null, 0));
   const [overlayMode, setOverlayMode] = useState<OverlayMode>(() =>
     pose?.referenceImage ? "image" : pose?.referencePose ? "skeleton" : "off",
   );
@@ -58,6 +60,14 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const [overlayOffsetX, setOverlayOffsetX] = useState(0);
   const [overlayOffsetY, setOverlayOffsetY] = useState(0);
   const referencePose = useMemo(() => getReferencePose(pose), [pose]);
+
+  const handleReadinessChange = useCallback((next: ReadinessResult) => {
+    setReadiness((current) =>
+      current.state === next.state && current.score === next.score && current.stabilizedForMs === next.stabilizedForMs
+        ? current
+        : next,
+    );
+  }, []);
 
   useEffect(() => {
     if (!capturedPhoto) return;
@@ -191,6 +201,29 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
                 {camera.status !== "ready" && (
                   <p className="camera-stage-status" role="status">Preparing live preview...</p>
                 )}
+                {pose && (
+                  <div
+                    aria-live="polite"
+                    className={`readiness-badge ${readiness.isReady ? "is-ready" : ""} ${readiness.state === "stabilizing" ? "is-stabilizing" : ""}`}
+                    role="status"
+                  >
+                    <span aria-hidden="true" className="readiness-dot" />
+                    {readiness.isReady
+                      ? "READY TO CAPTURE"
+                      : readiness.state === "stabilizing"
+                        ? "Hold that pose…"
+                        : readiness.state === "adjusting"
+                          ? "Almost there"
+                          : readiness.state === "low-confidence"
+                            ? "Move into the frame"
+                            : readiness.state === "no-person"
+                              ? "No person detected"
+                              : "Preparing pose detection"}
+                  </div>
+                )}
+                {pose && (
+                  <p className="camera-readiness-message">{readiness.message}</p>
+                )}
               </>
             ) : camera.status === "error" ? (
               <CameraError
@@ -208,6 +241,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
               <PoseVisionLayer
                 enabled={hasStream && camera.status === "ready" && !capturedPhoto}
                 mirrored={facingMode === "user"}
+                onReadinessChange={handleReadinessChange}
                 pose={pose}
                 videoRef={videoRef}
               />

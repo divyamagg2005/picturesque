@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
-import type { AlignmentResult, Pose } from "@/types";
+import type { AlignmentResult, Pose, ReadinessResult } from "@/types";
 import { getReferencePose } from "@/lib/pose/reference-pose-utils";
 import { comparePoses } from "@/lib/vision/pose-comparison";
 import { smoothAlignment } from "@/lib/vision/alignment-smoothing";
+import { evaluateReadiness, READINESS_DEFAULTS } from "@/lib/vision/readiness";
 import { usePoseDetection } from "@/hooks/use-pose-detection";
 import type { PoseDetectionSnapshot } from "@/types";
 import { DetectedPoseOverlay } from "./DetectedPoseOverlay";
@@ -15,20 +16,23 @@ type PoseVisionLayerProps = {
   videoRef: RefObject<HTMLVideoElement | null>;
   enabled: boolean;
   mirrored: boolean;
+  onReadinessChange?: (readiness: ReadinessResult) => void;
 };
 
 const MIN_ALIGNMENT_CONFIDENCE = 0.55;
 
-export function PoseVisionLayer({ pose, videoRef, enabled, mirrored }: PoseVisionLayerProps) {
+export function PoseVisionLayer({ pose, videoRef, enabled, mirrored, onReadinessChange }: PoseVisionLayerProps) {
   const referencePose = useMemo(() => getReferencePose(pose), [pose]);
   const [snapshot, setSnapshot] = useState<PoseDetectionSnapshot | null>(null);
   const [alignment, setAlignment] = useState<AlignmentResult | null>(null);
   const [showLiveSkeleton, setShowLiveSkeleton] = useState(true);
   const previousAlignmentRef = useRef<AlignmentResult | null>(null);
+  const stabilizationStartRef = useRef<number | null>(null);
 
   const onDetection = useCallback((nextSnapshot: PoseDetectionSnapshot) => {
     setSnapshot(nextSnapshot);
     if (nextSnapshot.status !== "detected" || !referencePose) {
+      stabilizationStartRef.current = null;
       previousAlignmentRef.current = null;
       setAlignment(null);
       return;
@@ -38,6 +42,7 @@ export function PoseVisionLayer({ pose, videoRef, enabled, mirrored }: PoseVisio
       detectedAspectRatio: nextSnapshot.sourceWidth / nextSnapshot.sourceHeight,
     });
     if (!result) {
+      stabilizationStartRef.current = null;
       previousAlignmentRef.current = null;
       setAlignment(null);
       return;
@@ -53,6 +58,39 @@ export function PoseVisionLayer({ pose, videoRef, enabled, mirrored }: PoseVisio
     onDetection,
     videoRef,
   });
+
+  useEffect(() => {
+    if (!onReadinessChange) return;
+
+    if (!enabled) {
+      onReadinessChange(evaluateReadiness(null, { status: "idle" }, null, 0));
+      return;
+    }
+
+    if (!alignment) {
+      const base = evaluateReadiness(
+        null,
+        { status: "ready" },
+        snapshot?.status ?? null,
+        0,
+      );
+      onReadinessChange(base);
+      return;
+    }
+
+    const hasGoodAlignment = alignment.score >= READINESS_DEFAULTS.minAlignment && alignment.confidence >= 0.6;
+    if (hasGoodAlignment) {
+      if (stabilizationStartRef.current === null) {
+        stabilizationStartRef.current = performance.now();
+      }
+      const stabilizedForMs = performance.now() - stabilizationStartRef.current;
+      onReadinessChange(evaluateReadiness(alignment, { status: "ready" }, snapshot?.status ?? "detected", stabilizedForMs));
+      return;
+    }
+
+    stabilizationStartRef.current = null;
+    onReadinessChange(evaluateReadiness(alignment, { status: "ready" }, snapshot?.status ?? "detected", 0));
+  }, [alignment, enabled, onReadinessChange, snapshot?.status]);
 
   if (!enabled) return null;
 
