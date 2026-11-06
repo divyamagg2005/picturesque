@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/common/button";
 import type { Pose, ReadinessResult } from "@/types";
 import { useCamera } from "@/hooks/use-camera";
@@ -80,9 +80,38 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const [filterPreset, setFilterPreset] = useState<CameraFilterPresetId>("none");
   const [filterIntensity, setFilterIntensity] = useState(55);
   const [referenceAspectRatio, setReferenceAspectRatio] = useState<number | undefined>(undefined);
+  const [stageBounds, setStageBounds] = useState({ height: 0, width: 0 });
+  const stageWrapRef = useRef<HTMLDivElement>(null);
   const referencePose = useMemo(() => getReferencePose(pose), [pose]);
   const liveFilterStyle = getFilterPreviewStyle(filterPreset, filterIntensity);
   const currentAspectRatio = getAspectRatioValue(aspectRatio, customWidth, customHeight);
+  const shortLandscape = stageBounds.width > stageBounds.height && stageBounds.height <= 700;
+  const stageHeightBudget = Math.max(
+    180,
+    stageBounds.height - (shortLandscape ? (pose ? 350 : 320) : (pose ? 345 : stageBounds.width <= 500 ? 205 : 190)),
+  );
+  const stageWidth = stageBounds.width > 0
+    ? Math.min(pose ? 400 : 560, stageBounds.width, stageHeightBudget * currentAspectRatio)
+    : undefined;
+  const stageHeight = stageWidth ? stageWidth / currentAspectRatio : undefined;
+
+  useEffect(() => {
+    const stageWrap = stageWrapRef.current;
+    if (!stageWrap) return;
+
+    const updateBounds = () => {
+      setStageBounds({ height: window.innerHeight, width: stageWrap.clientWidth });
+    };
+    const observer = new ResizeObserver(updateBounds);
+    observer.observe(stageWrap);
+    window.addEventListener("resize", updateBounds);
+    updateBounds();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateBounds);
+    };
+  }, []);
 
   useEffect(() => {
     if (!pose?.referenceImage) {
@@ -215,8 +244,16 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
       )}
 
       <section aria-label="Camera experience" className="camera-workspace">
-        <div className="camera-stage-wrap">
-          <div aria-label={capturedPhoto ? "Captured photo preview" : "Live camera preview"} className={`camera-stage${capturedPhoto ? " is-reviewing" : ""}`}>
+        <div className="camera-stage-wrap" ref={stageWrapRef}>
+          <div
+            aria-label={capturedPhoto ? "Captured photo preview" : "Live camera preview"}
+            className={`camera-stage${capturedPhoto ? " is-reviewing" : ""}`}
+            style={{
+              aspectRatio: currentAspectRatio,
+              height: stageHeight ? `${stageHeight}px` : undefined,
+              width: stageWidth ? `${stageWidth}px` : undefined,
+            }}
+          >
             <video
               aria-hidden={capturedPhoto !== null}
               autoPlay

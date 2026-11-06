@@ -1061,7 +1061,7 @@ button {
 .camera-stage {
   position: relative;
   width: 100%;
-  max-height: calc(100dvh - 190px);
+  max-height: none;
   aspect-ratio: 3 / 4;
   overflow: hidden;
   background: #090b09;
@@ -1319,9 +1319,10 @@ button {
 }
 
 .camera-toolbar-row {
-  display: grid;
+  display: flex;
   width: min(100%, 560px);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  flex-wrap: wrap;
+  align-items: stretch;
   gap: 0.75rem;
 }
 
@@ -1352,23 +1353,150 @@ button {
 }
 
 .camera-zoom-control {
+  min-width: 0;
+  flex: 1 1 250px;
   display: grid;
-  gap: 0.45rem;
+  gap: 0.35rem;
 }
 
-.camera-zoom-control input,
 .intensity-control input {
   width: 100%;
   accent-color: var(--accent);
 }
 
-.camera-zoom-control output,
+.zoom-wheel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.zoom-wheel-heading output,
 .intensity-control output,
 .ratio-meta strong {
   color: var(--foreground);
   font-size: 0.74rem;
   letter-spacing: normal;
   text-transform: none;
+}
+
+.zoom-wheel {
+  position: relative;
+  display: grid;
+  height: 2.15rem;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid rgb(240 238 231 / 14%);
+  border-radius: 0.45rem;
+  background:
+    linear-gradient(90deg, #171c18 0%, #232a24 50%, #171c18 100%);
+  cursor: ew-resize;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.zoom-wheel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.zoom-wheel.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.zoom-wheel::before,
+.zoom-wheel::after {
+  position: absolute;
+  z-index: 1;
+  inset-block: 0;
+  width: 1.8rem;
+  content: "";
+  pointer-events: none;
+}
+
+.zoom-wheel::before {
+  left: 0;
+  background: linear-gradient(90deg, #171c18, transparent);
+}
+
+.zoom-wheel::after {
+  right: 0;
+  background: linear-gradient(270deg, #171c18, transparent);
+}
+
+.zoom-wheel-ticks {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 0.65rem;
+  pointer-events: none;
+}
+
+.zoom-wheel-ticks span {
+  width: 1px;
+  height: 0.42rem;
+  background: rgb(240 238 231 / 36%);
+}
+
+.zoom-wheel-ticks span.is-major {
+  height: 0.72rem;
+  background: rgb(240 238 231 / 62%);
+}
+
+.zoom-wheel-ticks span.is-center {
+  height: 1rem;
+  background: var(--accent);
+}
+
+.zoom-wheel-indicator {
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  width: 1.2rem;
+  border-right: 1px solid rgb(195 210 188 / 38%);
+  border-left: 1px solid rgb(195 210 188 / 38%);
+  background: rgb(195 210 188 / 7%);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.zoom-presets {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.zoom-preset {
+  min-width: 2.35rem;
+  min-height: 1.65rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoom-preset[aria-pressed="true"] {
+  background: rgb(195 210 188 / 14%);
+  color: var(--foreground);
+}
+
+.zoom-preset:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.zoom-preset:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .camera-aspect-indicator {
@@ -1859,11 +1987,11 @@ button {
   }
 
   .camera-stage {
-    max-height: calc(100dvh - 205px);
+    max-height: none;
   }
 
   .camera-app.has-pose .camera-stage {
-    max-height: calc(100dvh - 345px);
+    max-height: none;
   }
 
   .camera-controls {
