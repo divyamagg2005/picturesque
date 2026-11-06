@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Footer } from "@/components/common/footer";
 import { Navbar } from "@/components/common/navbar";
 import { FeaturedPoses } from "@/components/home/FeaturedPoses";
+import { GalleryReferenceAction } from "@/components/camera/GalleryReferenceAction";
 import { PoseExplorer } from "@/components/poses/PoseExplorer";
 import { poses } from "@/data/poses";
 import { POSE_CATEGORIES, type PoseCategory } from "@/types";
@@ -43,6 +44,9 @@ async function ExplorePageContent({ searchParams }: ExplorePageProps) {
         <h1>Find a pose that feels like you.</h1>
         <p>Browse thoughtful prompts for portraits, people, and the places you remember.</p>
       </section>
+      <div className="explore-gallery-action">
+        <GalleryReferenceAction />
+      </div>
       <FeaturedPoses
         description="A few expressive starting points from the collection."
         poses={featuredPoses}

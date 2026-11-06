@@ -18,7 +18,6 @@ import { getReferencePose } from "@/lib/pose/reference-pose-utils";
 import {
   deleteGalleryReference,
   readGalleryReference,
-  saveGalleryReference,
 } from "@/lib/camera/gallery-reference-storage";
 import { evaluateReadiness } from "@/lib/vision/readiness";
 import {
@@ -255,31 +254,6 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
     setCustomHeight(1000);
   }
 
-  async function handleGalleryImageSelect(file: File) {
-    if (file.type && !file.type.startsWith("image/")) {
-      setActionMessage("Choose an image file to use as your reference.");
-      return;
-    }
-
-    let src: string | null = null;
-    try {
-      src = URL.createObjectURL(file);
-      await saveGalleryReference(file);
-      setGalleryReference({ name: file.name || "Gallery image", src });
-      src = null;
-      aspectRatioRef.current = "custom";
-      setAspectRatio("custom");
-      setOverlayMode("image");
-      setOverlayScale(1);
-      setOverlayOffsetX(0);
-      setOverlayOffsetY(0);
-      setActionMessage("Gallery reference saved on this device.");
-    } catch (error) {
-      if (src) URL.revokeObjectURL(src);
-      setActionMessage(error instanceof Error ? error.message : "The gallery image could not be saved on this device.");
-    }
-  }
-
   async function handleRemoveGalleryImage() {
     try {
       await deleteGalleryReference();
@@ -359,7 +333,6 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
         mode={overlayMode}
         offsetX={overlayOffsetX}
         offsetY={overlayOffsetY}
-        onGalleryImageSelect={(file) => void handleGalleryImageSelect(file)}
         onModeChange={setOverlayMode}
         onMove={moveOverlay}
         onOpacityChange={(opacity) => setOverlayOpacity(clampOverlayOpacity(opacity))}

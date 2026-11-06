@@ -15,7 +15,6 @@ type OverlayControlsProps = {
   imageAvailable: boolean;
   galleryImageName?: string;
   onModeChange: (mode: OverlayMode) => void;
-  onGalleryImageSelect: (file: File) => void;
   onRemoveGalleryImage: () => void;
   onOpacityChange: (opacity: number) => void;
   onScaleChange: (scale: number) => void;
@@ -32,7 +31,6 @@ export function OverlayControls({
   imageAvailable,
   galleryImageName,
   onModeChange,
-  onGalleryImageSelect,
   onRemoveGalleryImage,
   onOpacityChange,
   onScaleChange,
@@ -41,29 +39,16 @@ export function OverlayControls({
 }: OverlayControlsProps) {
   return (
     <div className="overlay-controls-shell">
-      <div className="gallery-reference-controls">
-          <label className="gallery-reference-picker">
-            <span>Recreate from Gallery</span>
-            <input
-              accept="image/*"
-              aria-label="Choose a reference image from your gallery"
-              onChange={(event) => {
-                const file = event.currentTarget.files?.[0];
-                if (file) onGalleryImageSelect(file);
-                event.currentTarget.value = "";
-              }}
-              type="file"
-            />
-          </label>
-          {galleryImageName && (
-            <div className="gallery-reference-selected">
-              <span className="gallery-reference-name" title={galleryImageName}>{galleryImageName}</span>
-              <button className="gallery-reference-remove" onClick={onRemoveGalleryImage} type="button">
-                Remove
-              </button>
-            </div>
-          )}
-      </div>
+      {galleryImageName && (
+        <div className="gallery-reference-controls">
+          <div className="gallery-reference-selected">
+            <span className="gallery-reference-name" title={galleryImageName}>{galleryImageName}</span>
+            <button className="gallery-reference-remove" onClick={onRemoveGalleryImage} type="button">
+              Remove
+            </button>
+          </div>
+        </div>
+      )}
 
       <details aria-label="Reference pose overlay settings" className="overlay-controls">
         <summary className="overlay-settings-summary">

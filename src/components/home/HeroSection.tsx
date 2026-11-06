@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Pose } from "@/types";
 import { PoseImage } from "@/components/common/pose-image";
+import { GalleryReferenceAction } from "@/components/camera/GalleryReferenceAction";
 
 export function HeroSection({ pose }: { pose: Pose }) {
   return (
@@ -13,6 +14,7 @@ export function HeroSection({ pose }: { pose: Pose }) {
         </p>
         <div className="hero-actions">
           <Link className="button button-primary" href="/explore">Start shooting</Link>
+          <GalleryReferenceAction />
           <Link className="hero-secondary" href="#featured-poses">Browse featured poses <span aria-hidden="true">↓</span></Link>
         </div>
       </div>
