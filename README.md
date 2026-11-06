@@ -1,8 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Photogenic
 
-## Getting Started
+Photogenic is an AI-guided photography application built with the Next.js App Router, TypeScript, and Tailwind CSS 4. The current Phase 0 foundation establishes the app shell and shared contracts; camera, vision, pose data, and persistence behavior are intentionally not implemented yet.
 
-First, run the development server:
+## Development
+
+Requirements: Node.js and npm.
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Project Structure
+
+```text
+src/
+	app/                 App Router pages, layout, and route error UI
+	components/
+		common/            Shared presentation components
+		home/              Home experience components
+		poses/             Pose experience components
+		camera/            Camera experience components
+	hooks/               Shared client-side hooks
+	lib/
+		camera/            Camera integration boundary
+		vision/            Computer vision integration boundary
+		pose/              Pose domain logic boundary
+	data/                Local JSON datasets
+	types/               Shared domain contracts
+	utils/               Small cross-cutting utilities
+```
+
+Use the `@/*` alias for imports from `src/`. Keep route pages as Server Components by default. Put browser APIs, event handlers, and state in focused Client Components, and only access browser globals after checking the runtime environment. Do not initialize camera or vision services during module evaluation or server rendering.
+
+Tailwind's default breakpoints are mobile-first; the global theme adds `xs` and `3xl`. Shared CSS variables for the dark studio palette live in `src/app/globals.css`.
+
+## Validation
+
+```bash
+npm run lint
+npm run build
+```
+
+## Deployment
+
+The app is configured for standard Next.js deployment, including Vercel. The home image is served by Unsplash and requires an internet connection to display.
 
 ```bash
 npm run dev
