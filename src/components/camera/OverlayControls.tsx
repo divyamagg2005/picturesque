@@ -12,7 +12,6 @@ type OverlayControlsProps = {
   scale: number;
   offsetX: number;
   offsetY: number;
-  skeletonAvailable: boolean;
   imageAvailable: boolean;
   onModeChange: (mode: OverlayMode) => void;
   onOpacityChange: (opacity: number) => void;
@@ -27,7 +26,6 @@ export function OverlayControls({
   scale,
   offsetX,
   offsetY,
-  skeletonAvailable,
   imageAvailable,
   onModeChange,
   onOpacityChange,
@@ -40,7 +38,7 @@ export function OverlayControls({
       <summary className="overlay-settings-summary">
         <span className="overlay-summary-title">Pose guide</span>
         <span className="overlay-summary-value">
-          {mode === "off" ? "Off" : mode === "image" ? "Photo" : "Skeleton"} · {Math.round(opacity * 100)}%
+          {mode === "image" ? "Photo" : "Off"} · {Math.round(opacity * 100)}%
         </span>
         <span aria-hidden="true" className="overlay-summary-chevron">⌄</span>
       </summary>
@@ -65,23 +63,7 @@ export function OverlayControls({
           >
             Photo
           </button>
-          <button
-            aria-label={skeletonAvailable ? "Show skeleton guide" : "Skeleton guide unavailable: no verified landmarks for this pose"}
-            aria-pressed={mode === "skeleton"}
-            disabled={!skeletonAvailable}
-            onClick={() => onModeChange("skeleton")}
-            title={skeletonAvailable ? undefined : "No verified skeleton landmarks are available for this pose."}
-            type="button"
-          >
-            Skeleton
-          </button>
         </div>
-
-        {!skeletonAvailable && mode !== "off" && (
-          <p className="overlay-landmark-note">
-            This pose has no verified skeleton points yet. The reference photo is available instead.
-          </p>
-        )}
 
         <label className="overlay-opacity-control">
           <span>Opacity</span>

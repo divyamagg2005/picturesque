@@ -68,7 +68,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const [actionMessage, setActionMessage] = useState("");
   const [readiness, setReadiness] = useState<ReadinessResult>(() => evaluateReadiness(null, { status: "idle" }, null, 0));
   const [overlayMode, setOverlayMode] = useState<OverlayMode>(() =>
-    pose?.referenceImage ? "image" : pose?.referencePose ? "skeleton" : "off",
+    pose?.referenceImage ? "image" : "off",
   );
   const [overlayOpacity, setOverlayOpacity] = useState(DEFAULT_OVERLAY_OPACITY);
   const [overlayScale, setOverlayScale] = useState(1);
@@ -80,6 +80,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const [filterPreset, setFilterPreset] = useState<CameraFilterPresetId>("none");
   const [filterIntensity, setFilterIntensity] = useState(55);
   const [referenceAspectRatio, setReferenceAspectRatio] = useState<number | undefined>(undefined);
+  const aspectRatioRef = useRef<AspectRatioPresetId>("standard");
   const [stageBounds, setStageBounds] = useState({ height: 0, width: 0 });
   const stageWrapRef = useRef<HTMLDivElement>(null);
   const referencePose = useMemo(() => getReferencePose(pose), [pose]);
@@ -121,7 +122,12 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
 
     const referenceImage = new Image();
     referenceImage.onload = () => {
-      setReferenceAspectRatio(referenceImage.naturalWidth / referenceImage.naturalHeight);
+      const ratio = referenceImage.naturalWidth / referenceImage.naturalHeight;
+      setReferenceAspectRatio(ratio);
+      if (aspectRatioRef.current === "custom") {
+        setCustomWidth(Math.max(Math.round(ratio * 1000), 1));
+        setCustomHeight(1000);
+      }
     };
     referenceImage.onerror = () => {
       setReferenceAspectRatio(undefined);
@@ -172,7 +178,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   }
 
   function resetOverlay() {
-    setOverlayMode(pose?.referenceImage ? "image" : referencePose ? "skeleton" : "off");
+    setOverlayMode(pose?.referenceImage ? "image" : "off");
     setOverlayOpacity(DEFAULT_OVERLAY_OPACITY);
     setOverlayScale(1);
     setOverlayOffsetX(0);
@@ -182,6 +188,23 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   function moveOverlay(horizontal: number, vertical: number) {
     setOverlayOffsetX((current) => clampOverlayOffset(current + horizontal));
     setOverlayOffsetY((current) => clampOverlayOffset(current + vertical));
+  }
+
+  function handleAspectRatioChange(value: AspectRatioPresetId) {
+    aspectRatioRef.current = value;
+    setAspectRatio(value);
+    if (value === "custom" && referenceAspectRatio) {
+      setCustomWidth(Math.max(Math.round(referenceAspectRatio * 1000), 1));
+      setCustomHeight(1000);
+    }
+  }
+
+  function matchReferenceAspectRatio() {
+    if (!referenceAspectRatio) return;
+    aspectRatioRef.current = "custom";
+    setAspectRatio("custom");
+    setCustomWidth(Math.max(Math.round(referenceAspectRatio * 1000), 1));
+    setCustomHeight(1000);
   }
 
   function handleDownload() {
@@ -373,17 +396,12 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
               customWidth={customWidth}
               filterIntensity={filterIntensity}
               filterPreset={filterPreset}
-              onAspectRatioChange={setAspectRatio}
+              onAspectRatioChange={handleAspectRatioChange}
               onCustomHeightChange={setCustomHeight}
               onCustomWidthChange={setCustomWidth}
               onFilterIntensityChange={setFilterIntensity}
               onFilterPresetChange={setFilterPreset}
-              onMatchReference={() => {
-                if (!referenceAspectRatio) return;
-                setAspectRatio("custom");
-                setCustomWidth(Math.max(Math.round(referenceAspectRatio * 1000), 1));
-                setCustomHeight(1000);
-              }}
+              onMatchReference={matchReferenceAspectRatio}
               referenceAspectRatio={referenceAspectRatio}
             />
             {pose && (
@@ -399,7 +417,6 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
                 onScaleChange={(scale) => setOverlayScale(clampOverlayScale(scale))}
                 opacity={overlayOpacity}
                 scale={overlayScale}
-                skeletonAvailable={Boolean(referencePose?.landmarks.length)}
               />
             )}
           </>

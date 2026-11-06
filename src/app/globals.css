@@ -1869,13 +1869,6 @@ button {
   outline-offset: 2px;
 }
 
-.overlay-landmark-note {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.68rem;
-  line-height: 1.4;
-}
-
 .overlay-opacity-control {
   display: grid;
   grid-template-columns: auto minmax(5rem, 1fr) 2.75rem;
@@ -2037,10 +2030,6 @@ button {
 
   .overlay-scale-controls {
     justify-content: start;
-  }
-
-  .overlay-landmark-note {
-    font-size: 0.64rem;
   }
 
   .overlay-nudge-controls {
