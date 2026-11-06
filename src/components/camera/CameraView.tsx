@@ -15,6 +15,11 @@ import {
   type CameraFilterPresetId,
 } from "@/lib/camera/capture-utils";
 import { getReferencePose } from "@/lib/pose/reference-pose-utils";
+import {
+  deleteGalleryReference,
+  readGalleryReference,
+  saveGalleryReference,
+} from "@/lib/camera/gallery-reference-storage";
 import { evaluateReadiness } from "@/lib/vision/readiness";
 import {
   clampOverlayOffset,
@@ -45,6 +50,11 @@ type CapturedPhoto = {
   width: number;
 };
 
+type GalleryReferenceImage = {
+  name: string;
+  src: string;
+};
+
 export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const {
     availableCameras,
@@ -63,6 +73,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
     zoom,
   } = useCamera();
   const [gridVisible, setGridVisible] = useState(true);
+  const [galleryReference, setGalleryReference] = useState<GalleryReferenceImage | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<CapturedPhoto | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
@@ -84,6 +95,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   const [stageBounds, setStageBounds] = useState({ height: 0, width: 0 });
   const stageWrapRef = useRef<HTMLDivElement>(null);
   const referencePose = useMemo(() => getReferencePose(pose), [pose]);
+  const activeReferenceImage = galleryReference?.src ?? pose?.referenceImage;
   const liveFilterStyle = getFilterPreviewStyle(filterPreset, filterIntensity);
   const currentAspectRatio = getAspectRatioValue(aspectRatio, customWidth, customHeight);
   const shortLandscape = stageBounds.width > stageBounds.height && stageBounds.height <= 700;
@@ -115,13 +127,16 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   }, []);
 
   useEffect(() => {
-    if (!pose?.referenceImage) {
-      setReferenceAspectRatio(undefined);
-      return;
+    let active = true;
+    if (!activeReferenceImage) {
+      return () => {
+        active = false;
+      };
     }
 
     const referenceImage = new Image();
     referenceImage.onload = () => {
+      if (!active) return;
       const ratio = referenceImage.naturalWidth / referenceImage.naturalHeight;
       setReferenceAspectRatio(ratio);
       if (aspectRatioRef.current === "custom") {
@@ -130,10 +145,43 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
       }
     };
     referenceImage.onerror = () => {
-      setReferenceAspectRatio(undefined);
+      if (active) setReferenceAspectRatio(undefined);
     };
-    referenceImage.src = pose.referenceImage;
-  }, [pose?.referenceImage]);
+    referenceImage.src = activeReferenceImage;
+
+    return () => {
+      active = false;
+      referenceImage.onload = null;
+      referenceImage.onerror = null;
+    };
+  }, [activeReferenceImage]);
+
+  useEffect(() => {
+    let active = true;
+    void readGalleryReference().then((storedReference) => {
+      if (!active || !storedReference) return;
+      setGalleryReference({
+        name: storedReference.name || "Gallery image",
+        src: URL.createObjectURL(storedReference.blob),
+      });
+      aspectRatioRef.current = "custom";
+      setAspectRatio("custom");
+      setOverlayMode("image");
+    }).catch(() => {
+      if (active) setActionMessage("The saved gallery reference could not be loaded from this device.");
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const src = galleryReference?.src;
+    return () => {
+      if (src) URL.revokeObjectURL(src);
+    };
+  }, [galleryReference]);
 
   const handleReadinessChange = useCallback((next: ReadinessResult) => {
     setReadiness((current) =>
@@ -178,7 +226,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
   }
 
   function resetOverlay() {
-    setOverlayMode(pose?.referenceImage ? "image" : "off");
+    setOverlayMode(activeReferenceImage ? "image" : "off");
     setOverlayOpacity(DEFAULT_OVERLAY_OPACITY);
     setOverlayScale(1);
     setOverlayOffsetX(0);
@@ -205,6 +253,51 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
     setAspectRatio("custom");
     setCustomWidth(Math.max(Math.round(referenceAspectRatio * 1000), 1));
     setCustomHeight(1000);
+  }
+
+  async function handleGalleryImageSelect(file: File) {
+    if (file.type && !file.type.startsWith("image/")) {
+      setActionMessage("Choose an image file to use as your reference.");
+      return;
+    }
+
+    let src: string | null = null;
+    try {
+      src = URL.createObjectURL(file);
+      await saveGalleryReference(file);
+      setGalleryReference({ name: file.name || "Gallery image", src });
+      src = null;
+      aspectRatioRef.current = "custom";
+      setAspectRatio("custom");
+      setOverlayMode("image");
+      setOverlayScale(1);
+      setOverlayOffsetX(0);
+      setOverlayOffsetY(0);
+      setActionMessage("Gallery reference saved on this device.");
+    } catch (error) {
+      if (src) URL.revokeObjectURL(src);
+      setActionMessage(error instanceof Error ? error.message : "The gallery image could not be saved on this device.");
+    }
+  }
+
+  async function handleRemoveGalleryImage() {
+    try {
+      await deleteGalleryReference();
+      setGalleryReference(null);
+      setReferenceAspectRatio(undefined);
+      if (pose?.referenceImage) {
+        aspectRatioRef.current = "custom";
+        setAspectRatio("custom");
+        setOverlayMode("image");
+      } else {
+        aspectRatioRef.current = "standard";
+        setAspectRatio("standard");
+        setOverlayMode("off");
+      }
+      setActionMessage("Gallery reference removed from this device.");
+    } catch (error) {
+      setActionMessage(error instanceof Error ? error.message : "The gallery image could not be removed.");
+    }
   }
 
   function handleDownload() {
@@ -248,8 +341,8 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
           <span aria-hidden="true">←</span> Back
         </Link>
         <div className="camera-pose-heading">
-          <span>{pose ? "Selected pose" : "Pose not selected"}</span>
-          <strong>{pose?.name ?? "Choose a pose"}</strong>
+          <span>{pose ? "Selected pose" : galleryReference ? "Gallery reference" : "Pose not selected"}</span>
+          <strong>{pose?.name ?? galleryReference?.name ?? "Choose a pose"}</strong>
         </div>
         <Link aria-label="Picturesque home" className="camera-wordmark" href="/">
           picturesque<span>.</span>
@@ -294,15 +387,15 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
             ) : hasStream ? (
               <>
                 {gridVisible && <CameraGrid />}
-                {camera.status === "ready" && pose && (
+                {camera.status === "ready" && activeReferenceImage && (
                   <PoseOverlay
-                    imageAlt={`${pose.name} reference photograph`}
+                    imageAlt={galleryReference?.name ?? pose?.imageAlt ?? "Gallery reference image"}
                     mirrored={facingMode === "user"}
                     mode={overlayMode}
                     offsetX={overlayOffsetX}
                     offsetY={overlayOffsetY}
                     opacity={overlayOpacity}
-                    referenceImage={pose.referenceImage}
+                    referenceImage={activeReferenceImage}
                     referencePose={referencePose}
                     scale={overlayScale}
                   />
@@ -369,7 +462,8 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
             <Button onClick={handleDownload} type="button">Download</Button>
             <Button onClick={() => void handleShare()} type="button" variant="secondary">Share</Button>
           </div>
-        ) : camera.status === "ready" ? (
+        ) : null}
+        {!capturedPhoto && camera.status === "ready" && (
           <>
             <CameraControls
               availableCameras={availableCameras}
@@ -404,23 +498,24 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
               onMatchReference={matchReferenceAspectRatio}
               referenceAspectRatio={referenceAspectRatio}
             />
-            {pose && (
-              <OverlayControls
-                imageAvailable={Boolean(pose.referenceImage)}
-                mode={overlayMode}
-                offsetX={overlayOffsetX}
-                offsetY={overlayOffsetY}
-                onModeChange={setOverlayMode}
-                onMove={moveOverlay}
-                onOpacityChange={(opacity) => setOverlayOpacity(clampOverlayOpacity(opacity))}
-                onReset={resetOverlay}
-                onScaleChange={(scale) => setOverlayScale(clampOverlayScale(scale))}
-                opacity={overlayOpacity}
-                scale={overlayScale}
-              />
-            )}
           </>
-        ) : null}
+        )}
+        <OverlayControls
+          galleryImageName={galleryReference?.name}
+          imageAvailable={Boolean(activeReferenceImage)}
+          mode={overlayMode}
+          offsetX={overlayOffsetX}
+          offsetY={overlayOffsetY}
+          onGalleryImageSelect={(file) => void handleGalleryImageSelect(file)}
+          onModeChange={setOverlayMode}
+          onMove={moveOverlay}
+          onOpacityChange={(opacity) => setOverlayOpacity(clampOverlayOpacity(opacity))}
+          onRemoveGalleryImage={() => void handleRemoveGalleryImage()}
+          onReset={resetOverlay}
+          onScaleChange={(scale) => setOverlayScale(clampOverlayScale(scale))}
+          opacity={overlayOpacity}
+          scale={overlayScale}
+        />
 
         <p aria-live="polite" className="camera-action-message">{actionMessage}</p>
         <p className="camera-privacy-note">Camera stays on this device. Nothing is uploaded.</p>

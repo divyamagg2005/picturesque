@@ -52,6 +52,7 @@ export function ReferenceImageOverlay({
         onError={() => setFailed(true)}
         sizes="(max-width: 760px) 100vw, 560px"
         src={src}
+        unoptimized={src.startsWith("blob:")}
       />
     </div>
   );
