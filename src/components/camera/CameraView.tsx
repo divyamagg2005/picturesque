@@ -72,6 +72,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
     zoom,
   } = useCamera();
   const [gridVisible, setGridVisible] = useState(true);
+  const [poseDotsEnabled, setPoseDotsEnabled] = useState(false);
   const [galleryReference, setGalleryReference] = useState<GalleryReferenceImage | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<CapturedPhoto | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -393,7 +394,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
                 {camera.status !== "ready" && (
                   <p className="camera-stage-status" role="status">Preparing live preview...</p>
                 )}
-                {pose && (
+                {pose && poseDotsEnabled && (
                   <div
                     aria-live="polite"
                     className={`readiness-badge ${readiness.isReady ? "is-ready" : ""} ${readiness.state === "stabilizing" ? "is-stabilizing" : ""}`}
@@ -413,7 +414,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
                               : "Preparing pose detection"}
                   </div>
                 )}
-                {pose && (
+                {pose && poseDotsEnabled && (
                   <p className="camera-readiness-message">{readiness.message}</p>
                 )}
               </>
@@ -429,7 +430,7 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
                 requesting={camera.status === "requesting"}
               />
             )}
-            {pose && (
+            {pose && poseDotsEnabled && (
               <PoseVisionLayer
                 enabled={hasStream && camera.status === "ready" && !capturedPhoto}
                 mirrored={facingMode === "user"}
@@ -461,6 +462,8 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
               disabled={isCapturing}
               facingMode={facingMode}
               gridVisible={gridVisible}
+              poseDotsEnabled={poseDotsEnabled}
+              poseDetectionAvailable={Boolean(pose)}
               onCapture={() => void handleCapture()}
               onDeviceChange={(deviceId) => {
                 setSelectedDeviceId(deviceId);
@@ -468,6 +471,10 @@ export function CameraView({ pose, invalidPoseId }: CameraViewProps) {
               }}
               onSwitchCamera={() => void switchCamera()}
               onToggleGrid={() => setGridVisible((visible) => !visible)}
+              onTogglePoseDots={() => {
+                setPoseDotsEnabled((enabled) => !enabled);
+                setReadiness(evaluateReadiness(null, { status: "idle" }, null, 0));
+              }}
               onZoomChange={(value) => {
                 void updateZoom(value);
               }}

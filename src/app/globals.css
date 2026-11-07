@@ -1273,6 +1273,57 @@ button {
   opacity: 0.55;
 }
 
+.camera-view-toggles {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.3rem;
+}
+
+.camera-view-toggle {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 0;
+  justify-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.25rem;
+  font-size: 0.66rem;
+}
+
+.camera-toggle-track {
+  position: relative;
+  display: block;
+  width: 1.65rem;
+  height: 0.82rem;
+  border: 1px solid rgb(240 238 231 / 30%);
+  border-radius: 999px;
+  background: #101310;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.camera-toggle-track > span {
+  position: absolute;
+  top: 0.1rem;
+  left: 0.1rem;
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: background-color 140ms ease, transform 140ms ease;
+}
+
+.camera-view-toggle[aria-pressed="true"] .camera-toggle-track {
+  border-color: var(--accent);
+  background: rgb(195 210 188 / 24%);
+}
+
+.camera-view-toggle[aria-pressed="true"] .camera-toggle-track > span {
+  background: var(--accent);
+  transform: translateX(0.82rem);
+}
+
 .shutter-control {
   display: grid;
   justify-items: center;

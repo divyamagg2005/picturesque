@@ -11,9 +11,12 @@ type CameraControlsProps = {
   cameraCapabilities: CameraCapabilities;
   facingMode: CameraFacingMode;
   gridVisible: boolean;
+  poseDotsEnabled: boolean;
+  poseDetectionAvailable: boolean;
   disabled: boolean;
   onDeviceChange: (deviceId: string) => void;
   onToggleGrid: () => void;
+  onTogglePoseDots: () => void;
   onSwitchCamera: () => void;
   onCapture: () => void;
   onZoomChange: (value: number) => void;
@@ -26,9 +29,12 @@ export function CameraControls({
   cameraCapabilities,
   facingMode,
   gridVisible,
+  poseDotsEnabled,
+  poseDetectionAvailable,
   disabled,
   onDeviceChange,
   onToggleGrid,
+  onTogglePoseDots,
   onSwitchCamera,
   onCapture,
   onZoomChange,
@@ -70,15 +76,30 @@ export function CameraControls({
       </div>
 
       <div aria-label="Camera controls" className="camera-controls">
-        <button
-          aria-label={gridVisible ? "Hide rule of thirds grid" : "Show rule of thirds grid"}
-          aria-pressed={gridVisible}
-          className="camera-control-button"
-          onClick={onToggleGrid}
-          type="button"
-        >
-          {gridVisible ? "Grid on" : "Grid off"}
-        </button>
+        <div className="camera-view-toggles">
+          <button
+            aria-label={gridVisible ? "Hide rule of thirds grid" : "Show rule of thirds grid"}
+            aria-pressed={gridVisible}
+            className="camera-control-button camera-view-toggle"
+            onClick={onToggleGrid}
+            type="button"
+          >
+            <span>Grid</span>
+            <span aria-hidden="true" className="camera-toggle-track"><span /></span>
+          </button>
+          {poseDetectionAvailable && (
+            <button
+              aria-label={poseDotsEnabled ? "Disable live pose dots" : "Enable live pose dots"}
+              aria-pressed={poseDotsEnabled}
+              className="camera-control-button camera-view-toggle"
+              onClick={onTogglePoseDots}
+              type="button"
+            >
+              <span>Dots</span>
+              <span aria-hidden="true" className="camera-toggle-track"><span /></span>
+            </button>
+          )}
+        </div>
         <div className="shutter-control">
           <CaptureButton disabled={disabled} onCapture={onCapture} />
           <span>Take photo</span>
